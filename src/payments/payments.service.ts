@@ -35,8 +35,23 @@ export class PaymentsService {
   }
 
   async stripeWebhook(req: Request, res: Response) {
-    const sig = req.headers['stripe-signature'];
-    console.log('Stripe Signature:', sig);
+    const sig: string = req.headers['stripe-signature'] as string;
+    let event: Stripe.Event;
+
+    const endpoint =
+      'whsec_54a2c68bf80264273bfee4d3b2c54bf76cb8cdf5bf0fdb1fc76930429955270f';
+
+    try {
+      event = this.stripe.webhooks.constructEvent(
+        req['rawBody'],
+        sig,
+        endpoint,
+      );
+    } catch (err) {
+      res.status(400).send(`Webhook Error: ${err.message}`);
+      return;
+    }
+    console.log('Received event:', event.type);
     return res.status(200).json({ sig });
   }
 }
